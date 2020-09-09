@@ -1,0 +1,1003 @@
+Main activity
+package com.example.myapplication111;
+import android.content.Intent;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.RadioGroup;
+public class MainActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        final Intent intent = new Intent(this, addPointsActivity.class);
+        RadioGroup radioGroup = findViewById(R.id.radioGroup);
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.radio1:
+                        intent.putExtra("typeaprx", 1);
+                        startActivity(intent);
+                        break;
+                    case R.id.radio2:
+                        intent.putExtra("typeaprx", 2);
+                        startActivity(intent);
+                        break;
+                    case R.id.radio3:
+                        intent.putExtra("typeaprx", 3);
+                        startActivity(intent);
+                        break;
+                    case R.id.radio4:
+                        intent.putExtra("typeaprx", 4);
+                        startActivity(intent);
+                        break;
+                    case R.id.radio5:
+                        intent.putExtra("typeaprx", 5);
+                        startActivity(intent);
+                        break;
+                }
+            }
+        });
+
+
+Aprox activity
+package com.example.myapplication111;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.os.Bundle;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
+import android.view.View;
+import java.text.DecimalFormat;
+
+public class ApproxActivity extends Activity {
+    int i = 0;
+    float cfa,cfb,cfc=0;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(new DrawView(this));
+    }
+    class DrawView extends View implements com.example.myapplication111.DrawView {
+        Paint p;
+        private final GestureDetector gestureDetector;
+        private ScaleGestureDetector mScaleDetector;
+        private float mScaleFactor = 1.f;
+
+        public DrawView(Context context) {
+            super(context);
+            gestureDetector = new GestureDetector(context, new MyGestureListener());
+            mScaleDetector = new ScaleGestureDetector(context, new ScaleListener());
+            p= new Paint();
+        }
+        @Override
+        public boolean onTouchEvent(MotionEvent event)
+        {
+            boolean retVal = mScaleDetector.onTouchEvent(event);
+            retVal = gestureDetector.onTouchEvent(event) || retVal;
+            return retVal || super.onTouchEvent(event);
+        }
+
+        private class MyGestureListener extends GestureDetector.SimpleOnGestureListener
+        {
+            @Override
+            public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY)
+            {
+                if (mScaleDetector.isInProgress()) {
+                    return false;
+                }
+                else {
+                scrollBy((int)distanceX, (int)distanceY);
+                return true;}
+            }
+        }
+        private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                mScaleFactor *= detector.getScaleFactor();
+                mScaleFactor = Math.max(0.1f, Math.min(mScaleFactor, 5.0f));
+                invalidate();
+                return true;
+            }
+        }
+        protected void onDraw(final Canvas canvas) {
+
+            final Intent intent = getIntent();
+            int typeAprx = (int) intent.getSerializableExtra("typeaprx");
+           canvas.drawColor(Color.GRAY);
+            canvas.scale(mScaleFactor, mScaleFactor);
+            switch (typeAprx) {
+                case 1:
+                    aprx1(canvas);
+                    break;
+                case 2:
+                    aprx2(canvas);
+                    break;
+                case 3:
+                    aprx3(canvas);
+                    break;
+                case 4:
+                    aprx4(canvas);
+                    break;
+                case 5:
+                    aprx5(canvas);
+                    break;
+            }
+
+        }
+
+        public void aprx1(Canvas canvas) {
+            Intent intent = getIntent();
+            String[] rowx = intent.getStringArrayExtra("xpoints");
+            String[] rowy = intent.getStringArrayExtra("ypoints");
+            int pointnum = (int) intent.getSerializableExtra("numpoints");
+            float[] pcrdx = new float[pointnum+1];
+            float[] pcrdy = new float[pointnum+1];
+            float minx = 0, maxx=0, miny=0,maxy=0, koefX=0, koefY=0,sh=0;
+            int startXy,startYx;
+            i = pointnum;
+            while (i >= 0) {
+                pcrdx[i] = Float.parseFloat(rowx[i]);
+                pcrdy[i] = Float.parseFloat(rowy[i]);
+                i--;
+            }
+            minx=pcrdx[0];
+            maxx=pcrdx[0];
+            miny=pcrdy[0];
+            maxy=pcrdy[0];
+            for(i=pointnum; i >=0;){
+                if(minx>pcrdx[i])
+                    minx = pcrdx[i];
+                if (maxx<pcrdx[i])
+                    maxx = pcrdx[i];
+                if(miny>pcrdy[i])
+                    miny = pcrdy[i];
+                if (maxy<pcrdy[i])
+                    maxy = pcrdy[i];
+                i--;
+            }
+            if (minx<0){
+                koefX= (Math.abs(minx)+maxx)/19;
+                startYx=0;
+            }
+            else{
+                koefX=(maxx-minx)/19 ;
+                startYx=10;
+            }
+            if (miny<0){
+                koefY= (Math.abs(miny)+maxy)/19;
+                startXy=0;
+            }
+            else{
+                koefY=(maxy-miny)/19 ;
+                startXy=290;
+            }
+            p.setColor(Color.BLACK);
+            p.setStrokeWidth(4);
+            p.setTextSize(15);
+            p.setTextAlign(Paint.Align.CENTER);
+            canvas.drawLine(10, startXy, 2010, startXy, p);
+            canvas.drawLine(startYx, 290, startYx, 2290, p);
+
+            int leight = 10;
+            int weight = 290;
+            p.setStrokeWidth(3);
+            sh=1;
+            while (leight != 2110) {
+                canvas.drawLine(leight, startXy-15, leight, startXy+15, p);
+
+                String strI = Float.toString(koefX*sh);
+                canvas.drawText(strI,leight,startXy-20,p);
+                sh += 1;
+                leight = leight + 100;
+            }
+            p.setTextAlign(Paint.Align.RIGHT);
+            sh=1;
+            while (weight != 2390) {
+                canvas.drawLine(startYx-15, weight, startYx+15, weight, p);
+                String strI = Float.toString(koefY*sh);
+                canvas.drawText(strI,startYx-20,weight,p);
+                sh+=1;
+                weight = weight + 100;
+            }
+            p.setColor(Color.GREEN);
+            p.setStrokeWidth(6);
+            i = pointnum;
+            while (i >= 0) {
+                canvas.drawPoint(10 + ((pcrdx[i] /koefX)*100), 290 + ((pcrdy[i] / koefY)*100), p);
+                i--;
+            }
+            float sumxi = 0;
+            float sumyi = 0;
+            float sumx2i = 0;
+            float sumxiyi = 0;
+            i = pointnum;
+            while (i >= 0) {
+                sumxi += pcrdx[i];
+                sumyi += pcrdy[i];
+                sumx2i += (pcrdx[i] * pcrdx[i]);
+                sumxiyi += (pcrdx[i] * pcrdy[i]);
+                i--;
+            }
+            cfa = (pointnum * sumxiyi - sumxi * sumyi) / (pointnum * sumx2i - (sumxi * sumxi));
+            cfb = (sumyi - cfa * sumxi) / pointnum;
+            float pointone,pointtwo;
+            pointone= cfa*minx +cfb;
+            pointtwo= cfa*maxx +cfb;
+            p.setColor(Color.GREEN);
+            p.setStrokeWidth(5);
+            canvas.drawLine(10+((minx/koefX)*100),290+((pointone/koefY)*100),10+((maxx/koefX)*100) , 290+((pointtwo/koefY)*100), p);
+            p.setTextSize(25);
+            p.setColor(Color.BLACK);
+            p.setTextAlign(Paint.Align.LEFT);
+            String strI = Float.toString(cfa);
+            canvas.drawText("A = ",10,50,p);
+            canvas.drawText(strI,50,50,p);
+            strI = Float.toString(cfb);
+            canvas.drawText("B = ",10,150,p);
+            canvas.drawText(strI,50,150,p);
+            canvas.drawText("Функция: Y= A * X - B",350,150,p);
+            }
+        public void aprx2(Canvas canvas) {
+            Intent intent = getIntent();
+            String[] rowx = intent.getStringArrayExtra("xpoints");
+            String[] rowy = intent.getStringArrayExtra("ypoints");
+            int pointnum = (int) intent.getSerializableExtra("numpoints");
+            float[] pcrdx = new float[pointnum+1];
+            float[] pcrdy = new float[pointnum+1];
+            i = pointnum;
+            float minx = 0, maxx=0, miny=0,maxy=0, koefX=0, koefY=0,sh=0;
+            int startXy,startYx;
+            while (i >= 0) {
+                pcrdx[i] = Float.parseFloat(rowx[i]);
+                pcrdy[i] = Float.parseFloat(rowy[i]);
+                i--;
+            }
+            minx=pcrdx[0];
+            maxx=pcrdx[0];
+            miny=pcrdy[0];
+            maxy=pcrdy[0];
+            for(i=pointnum; i >=0;){
+                if(minx>pcrdx[i])
+                    minx = pcrdx[i];
+                if (maxx<pcrdx[i])
+                    maxx = pcrdx[i];
+                if(miny>pcrdy[i])
+                    miny = pcrdy[i];
+                if (maxy<pcrdy[i])
+                    maxy = pcrdy[i];
+                i--;
+            }
+            if (minx<0){
+                koefX= (Math.abs(minx)+maxx)/19;
+                startYx=0;
+            }
+            else{
+                koefX=(maxx-minx)/19 ;
+                startYx=10;
+            }
+            if (miny<0){
+                koefY= (Math.abs(miny)+maxy)/19;
+                startXy=0;
+
+            }
+            else{
+                koefY=(maxy-miny)/19 ;
+                startXy=290;
+            }
+            p.setColor(Color.BLACK);
+            p.setStrokeWidth(3);
+            p.setTextSize(10);
+            p.setTextAlign(Paint.Align.CENTER);
+            canvas.drawLine(10, startXy, 2010, startXy, p);
+            canvas.drawLine(startYx, 290, startYx, 2290, p);
+            int leight = 10;
+            int weight = 290;
+            p.setStrokeWidth(2);
+            sh=1;
+            while (leight != 2110) {
+                canvas.drawLine(leight, startXy-15, leight, startXy+15, p);
+                String strI = Float.toString(koefX*sh);
+                canvas.drawText(strI,leight,startXy-20,p);
+                sh += 1;
+                leight = leight + 100;
+            }
+            p.setTextAlign(Paint.Align.RIGHT);
+            sh=1;
+            while (weight != 2390) {
+                canvas.drawLine(startYx-15, weight, startYx+15, weight, p);
+                String strI = Float.toString(koefY*sh);
+                canvas.drawText(strI,startYx-20,weight,p);
+                sh+=1;
+                weight = weight + 100;
+            }
+            p.setColor(Color.GREEN);
+            p.setStrokeWidth(6);
+            i = pointnum;
+            while (i >= 0) {
+                canvas.drawPoint(10 + ((pcrdx[i] /koefX)*100), 290 + ((pcrdy[i] / koefY)*100), p);
+                i--;
+            }
+            float sumxi = 0;
+            float sumx2i = 0;
+            float sumx3i = 0;
+            float sumx4i = 0;
+            float sumyi = 0;
+            float sumxiyi = 0;
+            float sumx2yi = 0;
+            i = pointnum;
+            while (i >= 0) {
+                sumxi += pcrdx[i];
+                sumx2i += pcrdx[i]*pcrdx[i];
+                sumx3i += pcrdx[i]*pcrdx[i]*pcrdx[i];
+                sumx4i += pcrdx[i]*pcrdx[i]*pcrdx[i]*pcrdx[i];
+                sumyi += pcrdy[i];
+                sumxiyi += pcrdx[i]*pcrdy[i];
+                sumx2yi += pcrdx[i]*pcrdx[i]*pcrdy[i];
+                i--;
+            }
+            float k = minx;
+           float determ=sumx2i*sumx2i*sumx2i+sumxi*sumxi*sumx4i+pointnum*sumx3i*sumx3i-pointnum*sumx2i*sumx4i-sumx2i*sumxi*sumx3i-sumxi*sumx3i*sumx2i;
+            if (determ!=0) {
+                cfa = ((sumyi * sumx2i * sumx2i) + (sumxi * sumxi * sumx2yi) + (pointnum * sumxiyi * sumx3i) - (pointnum * sumx2i * sumx2yi) - (sumyi * sumxi * sumx3i) - (sumxi * sumxiyi * sumx2i)) / determ;
+                cfb = (sumx2i*sumxiyi*sumx2i+sumyi*sumxi*sumx4i+pointnum*sumx3i*sumx2yi-pointnum*sumxiyi*sumx4i-sumx2i*sumxi*sumx2yi-sumyi*sumx3i*sumx2i) / determ;
+                cfc = (sumx2i*sumx2i*sumx2yi+sumxi*sumxiyi*sumx4i+sumyi*sumx3i*sumx3i-sumyi*sumx2i*sumx4i-sumx2i*sumxiyi*sumx3i-sumxi*sumx3i*sumx2yi) / determ;
+                p.setColor(Color.GREEN);
+                p.setStrokeWidth(5);
+                while (k<maxx){
+                    canvas.drawPoint((int)(10 + k/koefX*100) , (int)(290 + ((cfa*k*k+cfb*k)-cfc)/koefY*100) , p);
+                    k += koefX/100;
+        }}
+            p.setTextSize(25);
+            p.setColor(Color.BLACK);
+            p.setTextAlign(Paint.Align.LEFT);
+            String strI = Float.toString(cfa);
+            canvas.drawText("A = ",10,50,p);
+            canvas.drawText(strI,50,50,p);
+            strI = Float.toString(cfb);
+            canvas.drawText("B = ",10,120,p);
+            canvas.drawText(strI,50,120,p);
+            strI = Float.toString(cfc);
+            canvas.drawText("C = ",10,190,p);
+            canvas.drawText(strI,50,190,p);
+            canvas.drawText("Функция: Y= A * X^2 + B * X + C",350,190,p);
+ }
+        }
+        public void aprx3(Canvas canvas) {
+            Intent intent = getIntent();
+            String[] rowx = intent.getStringArrayExtra("xpoints");
+            String[] rowy = intent.getStringArrayExtra("ypoints");
+            int pointnum = (int) intent.getSerializableExtra("numpoints");
+            float[] pcrdx = new float[pointnum+1];
+            float[] pcrdy = new float[pointnum+1];
+            float minx = 0, maxx=0, miny=0,maxy=0, koefX=0, koefY=0,sh=0;
+            int startXy,startYx;
+            i = pointnum;
+            while (i >= 0) {
+                pcrdx[i] = Float.parseFloat(rowx[i]);
+                pcrdy[i] = Float.parseFloat(rowy[i]);
+                i--;
+            }
+            minx=pcrdx[0];
+            maxx=pcrdx[0];
+            miny=pcrdy[0];
+            maxy=pcrdy[0];
+            for(i=pointnum; i >=0;){
+                if(minx>pcrdx[i])
+                    minx = pcrdx[i];
+                if (maxx<pcrdx[i])
+                    maxx = pcrdx[i];
+                if(miny>pcrdy[i])
+                    miny = pcrdy[i];
+                if (maxy<pcrdy[i])
+                    maxy = pcrdy[i];
+                i--;
+            }
+            if (minx<0){
+                koefX= (Math.abs(minx)+maxx)/19;
+                startYx=0;
+            }
+            else{
+                koefX=(maxx-minx)/19 ;
+                startYx=10;
+            }
+            if (miny<0){
+                koefY= (Math.abs(miny)+maxy)/19;
+                startXy=0;
+            }
+            else{
+                koefY=(maxy-miny)/19 ;
+                startXy=290;
+            }
+            p.setColor(Color.BLACK);
+            p.setStrokeWidth(3);
+            p.setTextSize(10);
+            p.setTextAlign(Paint.Align.CENTER);
+            canvas.drawLine(10, startXy, 2010, startXy, p);
+            canvas.drawLine(startYx, 290, startYx, 2290, p);
+            int leight = 10;
+            int weight = 290;
+            p.setStrokeWidth(2);
+            sh=1;
+            while (leight != 2110) {
+                canvas.drawLine(leight, startXy-15, leight, startXy+15, p);
+                String strI = Float.toString(koefX*sh);
+                canvas.drawText(strI,leight,startXy-20,p);
+                sh += 1;
+                leight = leight + 100;
+            }
+            p.setTextAlign(Paint.Align.RIGHT);
+            sh=1;
+            while (weight != 2390) {
+                canvas.drawLine(startYx-15, weight, startYx+15, weight, p);
+                String strI = Float.toString(koefY*sh);
+                canvas.drawText(strI,startYx-20,weight,p);
+                sh+=1;
+                weight = weight + 100;
+            }
+            p.setColor(Color.GREEN);
+            p.setStrokeWidth(6);
+            i = pointnum;
+            while (i >= 0) {
+                canvas.drawPoint(10 + ((pcrdx[i] /koefX)*100), 290 + ((pcrdy[i] / koefY)*100), p);
+                i--;
+            }
+            float sumlnxi = 0;
+            float sumyi = 0;
+            float sumlnx2i = 0;
+            float sumlnxiyi = 0;
+            i = pointnum;
+            while (i >= 0) {
+                sumlnxi += Math.log(pcrdx[i]);
+                sumyi += pcrdy[i];
+                sumlnx2i += Math.log((pcrdx[i] * pcrdx[i]));
+                sumlnxiyi += ((Math.log(pcrdx[i])) * pcrdy[i]);
+                i--;
+            }
+            cfb = (sumlnxiyi*pointnum+sumyi*sumlnxi)/(sumlnxi*sumlnxi+sumlnx2i*pointnum);
+            cfa = (cfb*sumlnxi-sumyi)/pointnum;
+            p.setColor(Color.GREEN);
+            p.setStrokeWidth(5);
+            float k= minx ;
+            while (k<maxx){
+            canvas.drawPoint( (int) (10+k/koefX*100), (int) (290+(cfa*Math.log(k)+cfb)/koefY*100), p);
+                k += (koefX/100);}
+            p.setTextSize(25);
+            p.setColor(Color.BLACK);
+            p.setTextAlign(Paint.Align.LEFT);
+            String strI = Float.toString(cfa);
+            canvas.drawText("A = ",10,50,p);
+            canvas.drawText(strI,50,50,p);
+            strI = Float.toString(cfb);
+            canvas.drawText("B = ",10,150,p);
+            canvas.drawText(strI,50,150,p);
+            canvas.drawText("Функция: Y= A * Ln X + B",350,150,p);
+        }
+        public void aprx4(Canvas canvas) {
+            Intent intent = getIntent();
+            String[] rowx = intent.getStringArrayExtra("xpoints");
+            String[] rowy = intent.getStringArrayExtra("ypoints");
+            int pointnum = (int) intent.getSerializableExtra("numpoints");
+            float[] pcrdx = new float[pointnum+1];
+            float[] pcrdy = new float[pointnum+1];
+            float minx = 0, maxx=0, miny=0,maxy=0, koefX=0, koefY=0,sh=0;
+            int startXy,startYx;
+            i = pointnum;
+            while (i >= 0) {
+                pcrdx[i] = Float.parseFloat(rowx[i]);
+                pcrdy[i] = Float.parseFloat(rowy[i]);
+                i--;
+            }
+            minx=pcrdx[0];
+            maxx=pcrdx[0];
+            miny=pcrdy[0];
+            maxy=pcrdy[0];
+            for(i=pointnum; i >=0;){
+                if(minx>pcrdx[i])
+                    minx = pcrdx[i];
+                if (maxx<pcrdx[i])
+                    maxx = pcrdx[i];
+                if(miny>pcrdy[i])
+                    miny = pcrdy[i];
+                if (maxy<pcrdy[i])
+                    maxy = pcrdy[i];
+                i--;
+            }
+            if (minx<0){
+                koefX= (Math.abs(minx)+maxx)/19;
+                startYx=0;
+            }
+            else{
+                koefX=(maxx-minx)/19 ;
+                startYx=10;
+            }
+            if (miny<0){
+                koefY= (Math.abs(miny)+maxy)/19;
+                startXy=0;
+            }
+            else{
+                koefY=(maxy-miny)/19 ;
+                startXy=290;
+            }
+            p.setColor(Color.BLACK);
+            p.setStrokeWidth(3);
+            p.setTextSize(10);
+            p.setTextAlign(Paint.Align.CENTER);
+            canvas.drawLine(10, startXy, 2010, startXy, p);
+            canvas.drawLine(startYx, 290, startYx, 2290, p);
+            int leight = 10;
+            int weight = 290;
+            p.setStrokeWidth(2);
+            sh=1;
+            while (leight != 2110) {
+                canvas.drawLine(leight, startXy-15, leight, startXy+15, p);
+                String strI = Float.toString(koefX*sh);
+                canvas.drawText(strI,leight,startXy-20,p);
+                sh += 1;
+                leight = leight + 100;
+            }
+            p.setTextAlign(Paint.Align.RIGHT);
+            sh=1;
+            while (weight != 2290) {
+                canvas.drawLine(startYx-15, weight, startYx+15, weight, p);
+                String strI = Float.toString(koefY*sh);
+                canvas.drawText(strI,startYx-20,weight,p);
+                sh+=1;
+                weight = weight + 100;
+            }
+            p.setColor(Color.GREEN);
+            p.setStrokeWidth(6);
+            i = pointnum;
+            while (i >= 0) {
+                canvas.drawPoint(10 + ((pcrdx[i] /koefX)*100), 290 + ((pcrdy[i] / koefY)*100), p);
+                i--;
+            }
+            float sumxi = 0;
+            float sumlnyi = 0;
+            float sumx2i = 0;
+            float sumxilnyi = 0;
+            i = pointnum;
+            while (i >= 0) {
+                sumxi += pcrdx[i];
+                sumlnyi += Math.log(pcrdy[i]);
+                sumx2i += (pcrdx[i] * pcrdx[i]);
+                sumxilnyi += (pcrdx[i] * Math.log(pcrdy[i]));
+                i--;
+            }
+            float cfaln =0;
+            cfaln = (sumxilnyi*sumxi-sumlnyi*sumx2i)/(sumxi*sumxi-pointnum*sumx2i);
+            cfa= (float) Math.exp(cfaln);
+            cfb =(sumlnyi-cfaln*pointnum)/sumxi ;
+            p.setColor(Color.GREEN);
+            p.setStrokeWidth(5);
+            float k=minx;
+            while (k<maxx){
+                canvas.drawPoint((int)(10 + k/koefX*100) , (int)(290 + (cfa*Math.exp(cfb*k))/koefY*100) , p);
+                k += koefX/100;}
+            p.setTextSize(25);
+            p.setColor(Color.BLACK);
+            p.setTextAlign(Paint.Align.LEFT);
+            String strI = Float.toString(cfa);
+            canvas.drawText("A = ",10,50,p);
+            canvas.drawText(strI,50,50,p);
+            strI = Float.toString(cfb);
+            canvas.drawText("B = ",10,150,p);
+            canvas.drawText(strI,50,150,p);
+            canvas.drawText("Функция: Y= A * e ^ B * X",350,150,p);
+        }
+        public void aprx5(Canvas canvas) {
+            Intent intent = getIntent();
+            String[] rowx = intent.getStringArrayExtra("xpoints");
+            String[] rowy = intent.getStringArrayExtra("ypoints");
+            int pointnum = (int) intent.getSerializableExtra("numpoints");
+            float[] pcrdx = new float[pointnum+1];
+            float[] pcrdy = new float[pointnum+1];
+            float minx = 0, maxx=0, miny=0,maxy=0, koefX=0, koefY=0,sh=0;
+            int startXy,startYx;
+            i = pointnum;
+            while (i >= 0) {
+                pcrdx[i] = Float.parseFloat(rowx[i]);
+                pcrdy[i] = Float.parseFloat(rowy[i]);
+                i--;
+            }
+            minx=pcrdx[0];
+            maxx=pcrdx[0];
+            miny=pcrdy[0];
+            maxy=pcrdy[0];
+            for(i=pointnum; i >=0;){
+                if(minx>pcrdx[i])
+                    minx = pcrdx[i];
+                if (maxx<pcrdx[i])
+                    maxx = pcrdx[i];
+                if(miny>pcrdy[i])
+                    miny = pcrdy[i];
+                if (maxy<pcrdy[i])
+                    maxy = pcrdy[i];
+                i--;
+            }
+            if (minx<0){
+                koefX= (Math.abs(minx)+maxx)/19;
+                startYx=0;
+
+            }
+            else{
+                koefX=(maxx-minx)/19 ;
+                startYx=10;
+            }
+            if (miny<0){
+                koefY= (Math.abs(miny)+maxy)/19;
+                startXy=0;
+            }
+            else{
+                koefY=(maxy-miny)/19 ;
+                startXy=290;
+            }
+            p.setColor(Color.BLACK);
+            p.setStrokeWidth(3);
+            p.setTextSize(10);
+            p.setTextAlign(Paint.Align.CENTER);
+            canvas.drawLine(10, startXy, 2010, startXy, p);
+            canvas.drawLine(startYx, 290, startYx, 2290, p);
+            int leight = 10;
+            int weight = 290;
+            p.setStrokeWidth(2);
+            sh=1;
+            while (leight != 2110) {
+                canvas.drawLine(leight, startXy-15, leight, startXy+15, p);
+                String strI = Float.toString(koefX*sh);
+                canvas.drawText(strI,leight,startXy-20,p);
+                sh += 1;
+                leight = leight + 100;
+            }
+            p.setTextAlign(Paint.Align.RIGHT);
+            sh=1;
+            while (weight != 2390) {
+                canvas.drawLine(startYx-15, weight, startYx+15, weight, p);
+                String strI = Float.toString(koefY*sh);
+                canvas.drawText(strI,startYx-20,weight,p);
+                sh+=1;
+                weight = weight + 100;
+            }
+            p.setColor(Color.GREEN);
+            p.setStrokeWidth(6);
+            i = pointnum;
+            while (i >= 0) {
+                canvas.drawPoint(10 + ((pcrdx[i] /koefX)*100), 290 + ((pcrdy[i] / koefY)*100), p);
+
+                i--;
+            }
+            float sumlnxi = 0;
+            float sumlnyi = 0;
+            float sumlnx2i = 0;
+            float sumlnxiyi = 0;
+            i = pointnum;
+            while (i >= 0) {
+                sumlnxi += Math.log(pcrdx[i]);
+                sumlnyi += Math.log(pcrdy[i]);
+                sumlnx2i += Math.log(pcrdx[i] * pcrdx[i]);
+                sumlnxiyi += Math.log(pcrdx[i] * pcrdy[i]);
+                i--;
+            }
+            float cfaln =0;
+            cfaln = (sumlnxiyi*sumlnxi-sumlnyi*sumlnx2i)/(sumlnxi*sumlnxi-pointnum*sumlnx2i);
+            cfa =  (float) Math.exp(cfaln);
+            cfb = (sumlnyi-cfaln*pointnum) / sumlnxi;
+            p.setColor(Color.GREEN);
+            p.setStrokeWidth(5);
+            float k=minx;
+            while (k<maxx){
+                canvas.drawPoint((int)(10 + k/koefX*100) , (int)(290 + (cfa*Math.pow(k,cfb))/koefY*100) , p);
+                k += koefX/100;}
+            p.setTextSize(25);
+            p.setColor(Color.BLACK);
+            p.setTextAlign(Paint.Align.LEFT);
+            String strI = Float.toString(cfa);
+            canvas.drawText("A = ",10,50,p);
+            canvas.drawText(strI,50,50,p);
+            strI = Float.toString(cfb);
+            canvas.drawText("B = ",10,150,p);
+            canvas.drawText(strI,50,150,p);
+            canvas.drawText("Функция: Y= A * X ^ B",350,150,p);
+        } }}
+Addpoints activity
+package com.example.myapplication111;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+public class addPointsActivity extends AppCompatActivity {
+    private EditText edit, edity;
+    private TextView txtSow, txtSowy;
+    AlertDialog.Builder ad;
+    Context context;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_add_points);
+        edit = (EditText)findViewById(R.id.editText1);
+        txtSow = (TextView) findViewById(R.id.textView4);
+        txtSowy = (TextView) findViewById(R.id.textView3);
+        edity = (EditText)findViewById(R.id.editText2);
+        ActionBar actionBar =getSupportActionBar();
+        actionBar.setHomeButtonEnabled(true);
+        actionBar.setDisplayHomeAsUpEnabled(true); }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                this.finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }  }
+    int rownum;
+    public void read(View View){
+        try {
+            FileInputStream fileInput = openFileInput("pointBase.txt");
+            InputStreamReader rider = new InputStreamReader(fileInput);
+            BufferedReader buffer = new BufferedReader(rider);
+            StringBuffer Strbuffer = new StringBuffer();
+            String Lines;
+            rownum = 0;
+            while ((Lines = buffer.readLine()) !=null){
+                Strbuffer.append(Lines + "\n");
+                txtSow.setText(Strbuffer.toString());
+                rownum++;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            FileInputStream fileInput = openFileInput("pointBasey.txt");
+            InputStreamReader rider = new InputStreamReader(fileInput);
+            BufferedReader buffer = new BufferedReader(rider);
+            StringBuffer Strbuffer = new StringBuffer();
+            String Lines;
+            while ((Lines = buffer.readLine()) !=null){
+                Strbuffer.append(Lines + "\n");
+                txtSowy.setText(Strbuffer.toString());
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public void write(View View){
+        String addTxt = edit.getText().toString();
+        String addTxty = edity.getText().toString();
+        if (edit.getText().toString().length() !=0 && edity.getText().toString().length() !=0) {
+            try {
+                FileOutputStream FileOutput = openFileOutput("pointBase.txt", MODE_APPEND);
+                FileOutput.write(addTxt.getBytes());
+                FileOutput.write("\n".getBytes());
+                FileOutput.close();
+                edit.setText("");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                FileOutputStream FileOutput = openFileOutput("pointBasey.txt", MODE_APPEND);
+                FileOutput.write(addTxty.getBytes());
+                FileOutput.write("\n".getBytes());
+                FileOutput.close();
+                edity.setText("");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Toast.makeText(addPointsActivity.this, "Точка добавлена", Toast.LENGTH_SHORT).show();
+        }
+        else Toast.makeText(addPointsActivity.this, "Ошибка! Введите 2 координаты точки", Toast.LENGTH_LONG).show();
+    }
+    public void deleteall(View View){
+        context = addPointsActivity.this;
+        String title = "Предупреждение";
+        String message = "Вы действительно хотите удалить ВСЕ точки?";
+        String button1String = "Удалить";
+        String button2String = "Отмена";
+        ad = new AlertDialog.Builder(context);
+        ad.setTitle(title);
+        ad.setMessage(message);
+        ad.setPositiveButton(button1String, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
+                Toast.makeText(context, "Все точки удалены",
+                        Toast.LENGTH_LONG).show();
+                try {
+                    FileOutputStream FileOutput = openFileOutput("pointBase.txt", MODE_PRIVATE);
+                    FileOutput.write("".getBytes());
+                    FileOutput.close();
+                    txtSow.setText("");
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    FileOutputStream FileOutput = openFileOutput("pointBasey.txt", MODE_PRIVATE);
+                    FileOutput.write("".getBytes());
+                    FileOutput.close();
+                    txtSowy.setText("");
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } }
+        });
+        ad.setNegativeButton(button2String, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int arg1) {
+            }
+        });
+        ad.show();
+      //  Toast.makeText(addPointsActivity.this, "Все точки удалены",Toast.LENGTH_SHORT).show();
+    }
+    public void deleteaone(View View)  {
+        String[] rowsmass = new String[rownum];
+        String[] rowsmassy = new String[rownum];
+       int i = 0;
+        try {
+           FileInputStream fileInput = openFileInput("pointBase.txt");
+            InputStreamReader rider = new InputStreamReader(fileInput);
+            BufferedReader buffer = new BufferedReader(rider);
+            String Lines;
+            while ((Lines = buffer.readLine()) !=null){
+                rowsmass[i] = (Lines);
+                i++;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        i=0;
+           try {
+                FileOutputStream FileOutput = openFileOutput("pointBase.txt", MODE_PRIVATE);
+                while (i<(rownum-1)) {
+                    FileOutput.write(rowsmass[i].getBytes());
+                    FileOutput.write("\n".getBytes());
+                    i++;
+                }
+                FileOutput.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        i = 0;
+        try {
+            FileInputStream fileInput = openFileInput("pointBasey.txt");
+            InputStreamReader rider = new InputStreamReader(fileInput);
+            BufferedReader buffer = new BufferedReader(rider);
+            String Lines;
+            while ((Lines = buffer.readLine()) !=null){
+                rowsmassy[i] = (Lines);
+                i++;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        i=0;
+        try {
+            FileOutputStream FileOutput = openFileOutput("pointBasey.txt", MODE_PRIVATE);
+            while (i<(rownum-1)) {
+                FileOutput.write(rowsmassy[i].getBytes());
+                FileOutput.write("\n".getBytes());
+                i++;
+            }
+            FileOutput.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Toast.makeText(addPointsActivity.this, "Удалена последняя точка",Toast.LENGTH_SHORT).show();
+    }
+    public void aprx(View View){
+        String[] xmass = new String[rownum];
+        String[] ymass = new String[rownum];
+        int k = 0;
+        try {
+            FileInputStream fileInput = openFileInput("pointBase.txt");
+            InputStreamReader rider = new InputStreamReader(fileInput);
+            BufferedReader buffer = new BufferedReader(rider);
+            String Lines;
+            while ((Lines = buffer.readLine()) !=null){
+                xmass[k] = (Lines);
+                k++;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        k = 0;
+        try {
+            FileInputStream fileInput = openFileInput("pointBasey.txt");
+            InputStreamReader rider = new InputStreamReader(fileInput);
+            BufferedReader buffer = new BufferedReader(rider);
+            String Lines;
+            while ((Lines = buffer.readLine()) !=null){
+                ymass[k] = (Lines);
+                k++;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        final Intent intentin = getIntent();
+        int typeAprx =(int) intentin.getSerializableExtra("typeaprx");
+        Intent intent = new Intent(this, ApproxActivity.class);
+        intent.putExtra("xpoints", xmass);
+        intent.putExtra("ypoints", ymass);
+        intent.putExtra("numpoints", (rownum-1));
+        intent.putExtra("typeaprx", typeAprx);
+        startActivity(intent);
+    }}
+
+
+
+
+
+
+
+
+
+Android manifest
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.myapplication111">
+<application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+<activity android:name=".addPointsActivity">
+<intent-filter>
+<action android:name=".addPointsActivity" />
+<category android:name="android.intent.category.DEFAULT" />
+</intent-filter>
+</activity>
+<activity android:name=".ApproxActivity">
+<intent-filter>
+<action android:name=".ApproxActivity" />
+<category android:name="android.intent.category.DEFAULT" />
+</intent-filter>
+</activity>
+<activity android:name=".MainActivity">
+<intent-filter>
+<action android:name="android.intent.action.MAIN" />
+<category android:name="android.intent.category.LAUNCHER" />
+</intent-filter>
+</activity>
+</application>
+</manifest>
